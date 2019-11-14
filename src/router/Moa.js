@@ -26,26 +26,22 @@ router.get('/fetchALlMoa',async (req,res)=>{
 
 //fetch MOA by Product
 
-router.post("/fetchMOAByProduct", async(req,res)=>{
-    Indication.find({"Therapy_id":req.body.Therapy_id}).then((indication)=>{
-        console.log(indication)
-        indication.forEach((indi)=>{
-            console.log(indi._id)
-            Product.find({"Indication_id":{$elemMatch:{"$in": indi._id, "$exists":true}}}).then((product)=>{
-                   product.forEach((prod)=>{
-                       MOA.find({_id:{'$in':prod.Moa_id}}).then((moa)=>{
-                           res.send(moa)
-                       }).catch((e)=>{
-                           res.status(500).send()
-                       })
-                   })
-             }).catch((e)=>{
-                 res.status(500).send()
-             })
-        })
-    }).catch((e)=>{
-          res.status(500).send()
-    })
-})
+router.post("/fetchMOAByProduct", async (req,res)=>{
+    const indication = await Indication.find({"Therapy_id":req.body.Therapy_id});
+      id=[];
+      indication.forEach((indi)=>{
+         id.push(indi._id) 
+      })
+     const product = await Product.find({Indication_id:{$elemMatch:{"$in": id, "$exists":true}}});
+     id=[];
+     product.forEach((prod)=>{
+          for(let i=0;i<prod.Moa_id.length;i++){
+              id.push(prod.Moa_id[i])
+          }
+     })
+     MOA.find({_id:{'$in':id}}).then((moa)=>{
+         res.send(moa)
+      })
+      })
 
 module.exports = router

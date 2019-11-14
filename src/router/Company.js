@@ -25,28 +25,24 @@ router.get('/fetchALlCompanies',async (req,res)=>{
     })
 })
 
-//fetch Company by Product
 
-router.post("/fetchCompanyByProduct", async(req,res)=>{
-    Indication.find({"Therapy_id":req.body.Therapy_id}).then((indication)=>{
-        console.log(indication)
-        indication.forEach((indi)=>{
-            console.log(indi._id)
-            Product.find({"Indication_id":{$elemMatch:{"$in": indi._id, "$exists":true}}}).then((product)=>{
-                   product.forEach((prod)=>{
-                       Company.find({_id:{'$in':prod.Company_id}}).then((company)=>{
-                           res.send(company)
-                       }).catch((e)=>{
-                           res.status(500).send()
-                       })
-                   })
-             }).catch((e)=>{
-                 res.status(500).send()
-             })
-        })
-    }).catch((e)=>{
-          res.status(500).send()
-    })
-})
+
+router.post("/fetchCompanyByProduct", async (req,res)=>{
+    const indication = await Indication.find({"Therapy_id":req.body.Therapy_id});
+      id=[];
+      indication.forEach((indi)=>{
+         id.push(indi._id) 
+      })
+     const product = await Product.find({Indication_id:{$elemMatch:{"$in": id, "$exists":true}}});
+     id=[];
+     product.forEach((prod)=>{
+          for(let i=0;i<prod.Company_id.length;i++){
+              id.push(prod.Company_id[i])
+          }
+     })
+     Company.find({_id:{'$in':id}}).then((company)=>{
+         res.send(company)
+      })
+      })
 
 module.exports = router
