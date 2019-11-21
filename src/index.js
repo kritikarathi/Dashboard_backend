@@ -29,6 +29,7 @@ app.use(companyRouter)
 app.use(productRouter)
 app.use(newsRouter)
 
-app.listen(port,()=>{
-    console.log('Server is up on port '+ port)
-})
+module.exports = app
+// app.listen(port,()=>{
+//     console.log('Server is up on port '+ port)
+// })

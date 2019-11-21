@@ -15,8 +15,9 @@ router.post('/addNewLetter', async (req,res)=>{
 })
 
 
-router.get('/fetchALlNews',async (req,res)=>{
-    News.find({'Status':'Enabled'},null, {sort: '-updatedAt'}).populate({path:'CreatedBy',model:"User"}).then((news)=>{
+router.get('/fetchALlNews/:id',async (req,res)=>{
+    console.log("")
+    News.find({'Status':'Enabled', 'therapy':req.params.id},null, {sort: '-updatedAt'}).populate({path:'CreatedBy',model:"User"}).then((news)=>{
         res.send(news)
     }).catch((e)=>{
           res.status(500).send()
@@ -34,6 +35,10 @@ router.put('/updateNews/:id',async(req,res)=>{
     // }
     try{
         const news = await News.findById(req.params.id)
+        if(req.body.user != news.CreatedBy){
+            console.log("============>",req.body.user,news.CreatedBy)
+            return res.status(400).send({error:"You are not authorized to edit this news!"})        
+       }
         updates.forEach((update)=>news[update] = req.body[update])
 
         await news.save()
@@ -50,20 +55,24 @@ router.put('/updateNews/:id',async(req,res)=>{
 })
 
 //Delete the news
-router.put('/deleteNews/:id',async(req,res)=>{
-    const updates = Object.keys(req.body)
-    const allowedUpdates=['LetterStatus','Status']
-    const isValidOperation = updates.every((update)=> allowedUpdates.includes(update))
+router.post('/deleteNews/:id',async(req,res)=>{
+    const userId= Object.keys(req.body);
 
-    if(!isValidOperation){
-        return res.status(400).send({error:"Invalid updates!"})
+    const news = await News.findById(req.params.id)
+
+
+    if(req.body.user != news.CreatedBy){
+        console.log('======================', req.body.user , news.CreatedBy)
+         return res.status(400).send({error:"You are not authorized to delete this news!"})        
     }
     try{
-        const news = await News.findById(req.params.id)
-        updates.forEach((update)=>news[update] = req.body[update])
+         if(news.LetterStatus=='publish'){
+            news.LetterStatus='save'
+         }else {
+            news.Status = 'Disabled'
+         }
 
         await news.save()
-       // const user = await User.findByIdAndUpdate(req.params.id,req.body,{new:true,runValidators:true})
     if(!news){
             return res.status(404).send()
     }

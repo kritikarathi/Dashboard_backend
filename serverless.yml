@@ -1,0 +1,51 @@
+service: dashboard-ci-api
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: ap-south-1
+  apiName: dashboard-api-gateway 
+  stage: prod
+  deploymentBucket:
+    name: dashboard-cmi
+  profile: dashboard
+plugins:
+  - serverless-offline
+  - serverless-plugin-warmup
+custom:
+  # Enable warmup on all functions (only for production and staging)
+  warmup:
+        default:
+          - production  
+            # lambdas in dev and staging environment can even freeze... who cares. 
+        schedule: 'cron(0/20 8-18:30 ? * MON-FRI *)'  
+            # since our API is used only from an internal company WebApp keep lambda warm only every 20 minutes in office hours.
+        prewarm: true # Run WarmUp immediately after a deployment 
+        concurrency: 2 # Warm up 2 concurrent instances
+package:
+  exclude:
+    - .git/**
+    - test/**
+    - nodemon.json
+    - README.md
+functions:
+  index:
+    handler: lambda.handler
+    # vpc :
+    #   securityGroupIds:
+    #     - sg-0c3e605d73822685d
+    #   subnetIds:
+    #     - subnet-001457c1ce6df3305
+    #     - subnet-0339c9eec31f9c0bd
+    timeout: 180
+    events:
+    - http:
+        cors: true
+        path: '/'
+        method: any
+    - http:
+        cors: true
+        path: '{proxy+}'
+        method: any
+
+
+
