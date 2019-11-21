@@ -24,6 +24,7 @@ router.get('/fetchALlTherapies',async (req,res)=>{
     })
 })
 
+// add new Therapy
 router.post('/addNewTherapy', async (req, res) => {
     try {
         const therapy = new Therapy({
@@ -44,7 +45,7 @@ router.post('/addNewTherapy', async (req, res) => {
         })
     }
 })
-
+// update Therapy
 router.put('/updateTherapy/:id', async (req, res) => {
     try {
         const therapy = await Therapy.findByIdAndUpdate(req.params.id, {
@@ -53,6 +54,25 @@ router.put('/updateTherapy/:id', async (req, res) => {
         })
         res.status(201).json({
             status: "successfully updated",
+            data: therapy
+        })
+    } catch(err) {
+        res.status(400).json({
+            status: 'fail to update',
+            message: err
+        })
+    }
+})
+
+// delete Therapy
+router.delete('deleteTherapy/:id', async (req, res) => {
+    try {
+        const therapy = await Therapy.findByIdAndDelete(req.params.id, {
+            new: true,
+            runValidators: true
+        })
+        res.status(201).json({
+            status: "successfully deleted",
             data: therapy
         })
     } catch(err) {
